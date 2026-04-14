@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bunga Cantik Universe 🌌</title>
+    <!-- Tailwind CSS untuk Styling Cepat & Responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Poppins untuk kesan modern -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome untuk Ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #050510;
+            color: #ffffff;
+            overflow-x: hidden;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* Canvas untuk background bintang */
+        #starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+        }
+
+        /* Glassmorphism Effect */
+        .glass-panel {
+            background: rgba(20, 20, 40, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        /* Neon Glow Effects */
+        .neon-text-purple {
+            text-shadow: 0 0 10px #c084fc, 0 0 20px #c084fc;
+        }
+        .neon-text-blue {
+            text-shadow: 0 0 10px #60a5fa, 0 0 20px #60a5fa;
+        }
+        
+        .custom-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .custom-input:focus {
+            outline: none;
+            border-color: #c084fc;
+            box-shadow: 0 0 10px rgba(192, 132, 252, 0.3);
+        }
+
+        .btn-glow:hover {
+            box-shadow: 0 0 15px currentColor;
+            transform: translateY(-2px);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(192, 132, 252, 0.5);
+            border-radius: 10px;
+        }
+
+        .task-done {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body class="antialiased flex flex-col items-center py-10 px-4 min-h-screen">
+
+    <!-- Latar Belakang Bintang Animasi -->
+    <canvas id="starfield"></canvas>
+
+    <!-- Header -->
+    <header class="text-center mb-10 z-10 w-full max-w-4xl animate-fade-in-down">
+        <div class="inline-block glass-panel rounded-full px-6 py-2 mb-4">
+            <span class="text-sm font-medium tracking-wider text-purple-300 uppercase">Personal Dashboard</span>
+        </div>
+        <h1 class="text-4xl md:text-5xl font-bold mb-2 neon-text-purple">Bunga Cantik <span class="text-2xl">✨</span></h1>
+        <p class="text-gray-300 text-lg">Slay the day, manage your universe! 🚀💅</p>
+    </header>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8 z-10">
+        
+        <!-- SECTION: JADWAL HARIAN (Daily Quests) -->
+        <section class="glass-panel rounded-3xl p-6 md:p-8 flex flex-col h-[600px]">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-semibold text-purple-200"><i class="fa-solid fa-meteor mr-2"></i> Daily Quests</h2>
+                <span class="text-xs bg-purple-500/20 text-purple-300 py-1 px-3 rounded-full border border-purple-500/30">Jadwal Harian</span>
+            </div>
+
+            <!-- Input Area -->
+            <div class="flex gap-2 mb-6">
+                <input type="text" id="taskInput" placeholder="Mau ngapain hari ini, cantik?" 
+                    class="custom-input w-full rounded-xl px-4 py-3 text-sm placeholder-gray-400"
+                    onkeypress="handleTaskKeyPress(event)">
+                <button onclick="addTask()" class="bg-purple-600 hover:bg-purple-500 text-white rounded-xl px-4 py-3 transition-all btn-glow">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+            <!-- Task List -->
+            <div class="flex-1 overflow-y-auto pr-2 space-y-3" id="taskList">
+                <!-- Tasks akan di-render di sini oleh JavaScript -->
+            </div>
+            
+            <!-- Progress Info -->
+            <div class="mt-4 pt-4 border-t border-white/10 text-sm text-gray-400 text-center" id="taskProgress">
+                Belum ada quest hari ini.
+            </div>
+        </section>
+
+
+        <!-- SECTION: PENGELUARAN (Space Wallet) -->
+        <section class="glass-panel rounded-3xl p-6 md:p-8 flex flex-col h-[600px]">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-semibold text-blue-200"><i class="fa-solid fa-wallet mr-2"></i> Space Wallet</h2>
+                <span class="text-xs bg-blue-500/20 text-blue-300 py-1 px-3 rounded-full border border-blue-500/30">Pengeluaran</span>
+            </div>
+
+            <!-- Total Card -->
+            <div class="bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-2xl p-5 mb-6 border border-white/10 relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 text-blue-500/20 text-6xl"><i class="fa-solid fa-coins"></i></div>
+                <p class="text-sm text-blue-200 mb-1 relative z-10">Total Pengeluaran Hari Ini</p>
+                <h3 class="text-3xl font-bold neon-text-blue relative z-10" id="totalExpenseDisplay">Rp 0</h3>
+            </div>
+
+            <!-- Input Area -->
+            <div class="flex flex-col gap-3 mb-6">
+                <input type="text" id="expenseNameInput" placeholder="Beli apa tadi? (ex: Skincare, Boba)" 
+                    class="custom-input w-full rounded-xl px-4 py-3 text-sm placeholder-gray-400">
+                <div class="flex gap-2">
+                    <div class="relative w-full">
+                        <span class="absolute left-4 top-3 text-gray-400">Rp</span>
+                        <input type="number" id="expenseAmountInput" placeholder="0" 
+                            class="custom-input w-full rounded-xl pl-10 pr-4 py-3 text-sm placeholder-gray-400"
+                            onkeypress="handleExpenseKeyPress(event)">
+                    </div>
+                    <button onclick="addExpense()" class="bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-4 py-3 transition-all btn-glow">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Expense List -->
+            <div class="flex-1 overflow-y-auto pr-2 space-y-3" id="expenseList">
+                <!-- Expenses akan di-render di sini oleh JavaScript -->
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="mt-12 text-center text-sm text-gray-500 z-10">
+        <p>Made with ❤️ for Bunga Cantik | Galaxy Edition ✨</p>
+    </footer>
+
+    <!-- LOGIKA JAVASCRIPT -->
+    <script>
+        // --- 1. ANIMASI BACKGROUND BINTANG (CANVAS) ---
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let stars = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        function createStars() {
+            stars = [];
+            const numStars = Math.floor((window.innerWidth * window.innerHeight) / 2000); // Kepadatan bintang
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 1.5,
+                    vx: Math.floor(Math.random() * 50) - 25, // Kecepatan X
+                    vy: Math.floor(Math.random() * 50) - 25, // Kecepatan Y
+                    color: Math.random() > 0.8 ? '#c084fc' : '#ffffff' // Sesekali bintang warna ungu
+                });
+            }
+        }
+
+        function drawStars() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.globalCompositeOperation = "lighter";
+            
+            for (let i = 0, x = stars.length; i < x; i++) {
+                let s = stars[i];
+                
+                // Pindahkan bintang pelan-pelan
+                s.x += s.vx / 100;
+                s.y += s.vy / 100;
+                
+                // Jika keluar layar, munculkan dari sisi berlawanan
+                if (s.x < 0 || s.x > width) s.vx = -s.vx;
+                if (s.y < 0 || s.y > height) s.vy = -s.vy;
+                
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.radius, 0, 2 * Math.PI);
+                ctx.fillStyle = s.color;
+                
+                // Tambahkan efek glow untuk bintang besar
+                if(s.radius > 1) {
+                    ctx.shadowBlur = 5;
+                    ctx.shadowColor = s.color;
+                } else {
+                    ctx.shadowBlur = 0;
+                }
+                
+                ctx.fill();
+            }
+            requestAnimationFrame(drawStars);
+        }
+
+        window.addEventListener('resize', () => {
+            resize();
+            createStars();
+        });
+        
+        resize();
+        createStars();
+        drawStars();
+
+        // --- 2. LOGIKA APLIKASI (STATE MANGEMENT - IN MEMORY) ---
+        
+        // Data tersimpan di memory selama sesi ini
+        let tasks = [];
+        let expenses = [];
+
+        // Format angka ke Rupiah
+        const formatRupiah = (number) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(number);
+        };
+
+        // --- Fitur Daily Quests (Jadwal) ---
+        
+        function handleTaskKeyPress(e) {
+            if (e.key === 'Enter') addTask();
+        }
+
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const text = input.value.trim();
+            
+            if (text === '') return;
+            
+            tasks.push({
+                id: Date.now(),
+                text: text,
+                completed: false
+            });
+            
+            input.value = '';
+            renderTasks();
+        }
+
+        function toggleTask(id) {
+            const taskIndex = tasks.findIndex(t => t.id === id);
+            if (taskIndex > -1) {
+                tasks[taskIndex].completed = !tasks[taskIndex].completed;
+                renderTasks();
+            }
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            renderTasks();
+        }
+
+        function renderTasks() {
+            const list = document.getElementById('taskList');
+            const progress = document.getElementById('taskProgress');
+            list.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                list.innerHTML = `<div class="text-center text-gray-500 mt-10 italic">Belum ada quest. Ayo tambah aktivitasmu! ✨</div>`;
+                progress.innerText = "Belum ada quest hari ini.";
+                return;
+            }
+
+            let completedCount = 0;
+
+            tasks.forEach(task => {
+                if(task.completed) completedCount++;
+
+                const div = document.createElement('div');
+                div.className = `flex items-center justify-between p-3 rounded-xl custom-input transition-all ${task.completed ? 'opacity-60' : 'hover:-translate-y-1'}`;
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-3 cursor-pointer flex-1" onclick="toggleTask(${task.id})">
+                        <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors
+                            ${task.completed ? 'bg-purple-500 border-purple-500 text-white' : 'border-purple-400 text-transparent hover:bg-purple-500/20'}">
+                            <i class="fa-solid fa-check text-xs"></i>
+                        </div>
+                        <span class="${task.completed ? 'task-done text-gray-400' : 'text-white'} transition-all">${task.text}</span>
+                    </div>
+                    <button onclick="deleteTask(${task.id})" class="text-gray-500 hover:text-red-400 p-2 transition-colors">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                `;
+                list.appendChild(div);
+            });
+
+            // Update progress text
+            if (completedCount === tasks.length && tasks.length > 0) {
+                progress.innerHTML = `<span class="text-purple-400">Yeay! Semua quest selesai! Kamu keren banget! 💅✨</span>`;
+            } else {
+                progress.innerText = `Progress: ${completedCount} / ${tasks.length} Quest Selesai`;
+            }
+        }
+
+        // --- Fitur Space Wallet (Pengeluaran) ---
+
+        function handleExpenseKeyPress(e) {
+            if (e.key === 'Enter') addExpense();
+        }
+
+        function addExpense() {
+            const nameInput = document.getElementById('expenseNameInput');
+            const amountInput = document.getElementById('expenseAmountInput');
+            
+            const name = nameInput.value.trim();
+            const amount = parseInt(amountInput.value);
+            
+            if (name === '' || isNaN(amount) || amount <= 0) return;
+            
+            expenses.push({
+                id: Date.now(),
+                name: name,
+                amount: amount,
+                time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+            });
+            
+            nameInput.value = '';
+            amountInput.value = '';
+            nameInput.focus();
+            
+            renderExpenses();
+        }
+
+        function deleteExpense(id) {
+            expenses = expenses.filter(e => e.id !== id);
+            renderExpenses();
+        }
+
+        function renderExpenses() {
+            const list = document.getElementById('expenseList');
+            const totalDisplay = document.getElementById('totalExpenseDisplay');
+            list.innerHTML = '';
+            
+            if (expenses.length === 0) {
+                list.innerHTML = `<div class="text-center text-gray-500 mt-10 italic">Dompet masih aman! Belum ada jajan. 💸</div>`;
+                totalDisplay.innerText = "Rp 0";
+                return;
+            }
+
+            let total = 0;
+
+            expenses.slice().reverse().forEach(expense => {
+                total += expense.amount;
+
+                const div = document.createElement('div');
+                div.className = `flex items-center justify-between p-3 rounded-xl custom-input hover:-translate-y-1 transition-all`;
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-500/20 text-blue-300 flex items-center justify-center border border-blue-500/30">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+                        <div>
+                            <p class="text-white font-medium text-sm">${expense.name}</p>
+                            <p class="text-xs text-gray-400">${expense.time}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="text-blue-200 font-semibold text-sm">${formatRupiah(expense.amount)}</span>
+                        <button onclick="deleteExpense(${expense.id})" class="text-gray-500 hover:text-red-400 transition-colors">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+
+            // Update Total
+            totalDisplay.innerText = formatRupiah(total);
+        }
+
+        // Initialize empty states on load
+        window.onload = () => {
+            renderTasks();
+            renderExpenses();
+        };
+
+    </script>
+</body>
+</html>
